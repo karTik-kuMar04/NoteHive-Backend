@@ -7,7 +7,7 @@ class API_ERROR extends Error {
     constructor(
         statusCode: number,
         message: string = 'Something went wrong',
-        error: any,
+        error: any = null,
         stack?: string
     ) {
         super(message);
