@@ -14,3 +14,5 @@ class API_RES {
         this.message = message;
     }
 }
+
+export default API_RES;

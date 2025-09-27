@@ -1,10 +1,14 @@
-const asyncHandler = (asyncFn: any) => {
-    (req: any, res: any, next: any) => {
-        Promise.resolve(asyncFn(req, res, next)).catch((err) => next(err))
-    }
-}
+import { Request, Response, NextFunction } from "express";
 
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
 
+export default asyncHandler;
 
 
 // const asyncHandler = (fn: any) => { async ( req: any, res: any, next: any ) => {
@@ -17,5 +21,3 @@ const asyncHandler = (asyncFn: any) => {
 //         })
 //     }
 // }}
-
-export default asyncHandler

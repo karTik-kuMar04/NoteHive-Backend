@@ -21,7 +21,10 @@ const userSchema = new mongoose.Schema<IUser>(
         username: { type: String, required: true, unique: true, trim: true },
         email: { type: String, required: true, unique: true, lowercase: true, trim: true },
         password: { type: String, required: true },
-        avatar: { type: String, required: true },
+        avatar: {
+          public_id: { type: String, required: true },
+          url: { type: String, required: true }
+        },
         refreshToken: { type: String }
     },{ 
         timestamps: true 
