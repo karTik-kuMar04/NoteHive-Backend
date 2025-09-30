@@ -6,11 +6,12 @@ import asyncHandler from "../utils/asyncHandler";
 import uploadToCloudinary from "../utils/cloudinary";
 import API_RES from "../utils/ApiResponce";
 
+
 const CreateUser = asyncHandler(async (req: Request, res: Response) => {
     const { name, username, email, password } = req.body;
 
     if (!name || !username || !email || !password) {
-        throw new API_ERROR(4030, "Bad Request");
+        throw new API_ERROR(403, "Bad Request");
     }
 
     const existedUser = await User.findOne({
@@ -56,6 +57,60 @@ const CreateUser = asyncHandler(async (req: Request, res: Response) => {
     )
 });
 
+const loginUser = asyncHandler(async (req: Request, res: Response) => {
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        throw new API_ERROR(4030, "Bad Request");
+    }
+
+    const user = await User.findOne({ email });
+    console.log(user)
+
+    if (!user) {
+        throw new API_ERROR(404, "User not found");
+    }
+
+    const isPasswordMatched = await user.isPasswordCorrect(password);
+
+    if (!isPasswordMatched) {
+        throw new API_ERROR(401, "Invalid credentials");
+    }
+
+
+    const accessToken: string = user.generateAccessToken()
+    const refreshToken: string = user.generateRefreshToken() as string
+
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    return res.status(200).json(
+        new API_RES(
+            201,
+            {
+                accessToken,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    username: user.username,
+                    email: user.email,
+                    avatar: user.avatar
+                }
+            },
+            "login successful"
+        )
+    )
+});
+
+
 export { 
-    CreateUser
+    CreateUser,
+    loginUser
 };
+
+
