@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 
 import { User } from "../models/user.model";
-import API_ERROR from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
 import uploadToCloudinary from "../utils/cloudinary";
 import API_RES from "../utils/ApiResponce";
@@ -11,7 +10,7 @@ const CreateUser = asyncHandler(async (req: Request, res: Response) => {
     const { name, username, email, password } = req.body;
 
     if (!name || !username || !email || !password) {
-        throw new API_ERROR(403, "Bad Request");
+        return res.status(400).json({ message: "Please provide all required fields" });
     }
 
     const existedUser = await User.findOne({
@@ -20,19 +19,19 @@ const CreateUser = asyncHandler(async (req: Request, res: Response) => {
 
     // checking if user already exists
     if (existedUser) {
-        throw new API_ERROR(409, "User with email or username already exists");
+        return res.status(409).json({ message: "User already exists with this email or username" });
     }
 
     const avatarPath = req.file ? req.file.path : null;
 
     if (!avatarPath) {
-        throw new API_ERROR(400, "Avatar file is required");
+        return res.status(400).json({ message: "Please upload an avatar" });
     }
 
     const avatar = await uploadToCloudinary(avatarPath);
 
     if (!avatar) {
-        throw new API_ERROR(500, "Failed to upload avatar");
+        return res.status(500).json({ message: "Failed to upload avatar" });
     }
 
     const user = await User.create({
@@ -49,7 +48,7 @@ const CreateUser = asyncHandler(async (req: Request, res: Response) => {
     const isUserCreated = await User.findById(user._id).select("-password -refreshToken");
 
     if (!isUserCreated) {
-        throw new API_ERROR(500, "Failed to Register user");
+        return res.status(500).json({ message: "Failed to create user" });
     }
 
     return res.status(201).json(
@@ -62,20 +61,20 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        throw new API_ERROR(4030, "Bad Request");
+        return res.status(400).json({ message: "Please provide email and password" });
     }
 
     const user = await User.findOne({ email });
     console.log(user)
 
     if (!user) {
-        throw new API_ERROR(404, "User not found");
+        return res.status(404).json({ message: "User not found with this email" });
     }
 
     const isPasswordMatched = await user.isPasswordCorrect(password);
 
     if (!isPasswordMatched) {
-        throw new API_ERROR(401, "Invalid credentials");
+        return res.status(401).json({ message: "Entered password is Incorrect" });
     }
 
 
